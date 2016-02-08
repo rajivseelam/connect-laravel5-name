@@ -170,19 +170,17 @@ class Facebook implements ProviderInterface{
 			{
 				$fuser = $fresult['user'];
 
-				$result['first_name'] = $fuser->first_name;
-				$result['last_name'] = $fuser->last_name;
+				$result['name'] = $fuser->first_name.' '.$fuser->last_name;
 			}
 			else
 			{
 
-				$result['first_name'] = $user_profile->getFirstName();
-				$result['last_name'] = $user_profile->getLastName();
+				$result['name'] = $user_profile->getFirstName().' '.$user_profile->getLastName();
 
 			}
 
 			$result['username'] = $user_profile->getFirstName().' '.$user_profile->getLastName();
-			$result['name'] = $result['username'];
+			// $result['name'] = $result['username'];
 
 			$result['access_token'] = $session->getLongLivedSession()->getToken();
 
