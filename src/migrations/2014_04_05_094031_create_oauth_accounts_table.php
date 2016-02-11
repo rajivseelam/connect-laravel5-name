@@ -36,6 +36,9 @@ class CreateOauthAccountsTable extends Migration {
             $table->string('url')->nullable()->default(NULL);
             $table->string('channel')->nullable()->default(NULL);
 
+            $table->string('gender')->nullable()->default(NULL);
+            $table->string('birthday')->nullable()->default(NULL);
+
 			$table->timestamps();
 
 		});

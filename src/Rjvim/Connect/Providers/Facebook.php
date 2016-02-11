@@ -29,7 +29,7 @@ class Facebook implements ProviderInterface{
 
 		$this->sentry = \App::make('sentry');
 
-		$config = Config::get('connect::facebook.clients.'.$client);
+		$config = Config::get('rjvim.connect.facebook.clients.'.$client);
 
 		FacebookSession::setDefaultApplication($config['client_id'], $config['client_secret']);
 	}
@@ -43,12 +43,12 @@ class Facebook implements ProviderInterface{
 
 			foreach($this->scopes as $s)
 			{
-				$scopes = array_merge(Config::get('connect::facebook.scopes.'.$s),$scopes);
+				$scopes = array_merge(Config::get('rjvim.connect.facebook.scopes.'.$s),$scopes);
 			}
 		}
 		else
 		{
-			$scopes = Config::get('connect::facebook.scopes.'.$this->scopes);
+			$scopes = Config::get('rjvim.connect.facebook.scopes.'.$this->scopes);
 		}
 
 		return $scopes;
@@ -103,7 +103,7 @@ class Facebook implements ProviderInterface{
 	{
 		$req = Request::instance();
 
-		$config = Config::get('connect::facebook.clients.'.$this->client);
+		$config = Config::get('rjvim.connect.facebook.clients.'.$this->client);
 
 		$helper = new LaravelFacebookRedirectLoginHelper($config['redirect_uri']);
 
@@ -125,9 +125,12 @@ class Facebook implements ProviderInterface{
 
 		  try {
 
+
 		    $user_profile = (new FacebookRequest(
-		      $session, 'GET', '/me'
+		      $session, 'GET', '/me?fields=id,name,email,birthday,location,gender,bio'
 		    ))->execute()->getGraphObject(GraphUser::className());
+
+		    // dd($user_profile);
 
 		    $user_image = (new FacebookRequest(
 		      $session, 'GET', '/me/picture',
@@ -150,7 +153,14 @@ class Facebook implements ProviderInterface{
 
 		  } 
 
-			$result['uid'] = $user_profile->getId();
+		  	$user_profile = $user_profile->asArray();
+
+		  	$result = [];
+
+			$result['uid'] = isset($user_profile['id']) ? $user_profile['id'] : '';
+			$result['name'] = isset($user_profile['name']) ? $user_profile['name'] : '';
+			$result['gender'] = isset($user_profile['gender']) ? $user_profile['gender'] : '';
+			$result['birthday'] = isset($user_profile['birthday']) ? $user_profile['birthday'] : '';
 
 			if($this->sentry->check())
 			{
@@ -158,11 +168,12 @@ class Facebook implements ProviderInterface{
 			}
 			else
 			{
-				$result['email'] = $user_profile->getEmail();
+				$result['email'] = $user_profile['email'];
 			}
-			
-			$result['url'] = $user_profile->getLink();
-			$result['location'] = $user_profile->getLocation();
+
+			$result['username'] = $result['name'];
+
+			$result['location'] = isset($user_profile['location']->name) ? $user_profile['location']->name : '';
 
 			$fresult = $this->findUser($result['email']);
 
@@ -170,18 +181,14 @@ class Facebook implements ProviderInterface{
 			{
 				$fuser = $fresult['user'];
 
-				$result['name'] = $fuser->first_name.' '.$fuser->last_name;
+				$result['name'] = $fuser->name;
 			}
 			else
 			{
-
-				$result['name'] = $user_profile->getFirstName().' '.$user_profile->getLastName();
-
+				$result['name'] = $result['name'];
 			}
 
-			$result['username'] = $user_profile->getFirstName().' '.$user_profile->getLastName();
-			// $result['name'] = $result['username'];
-
+			
 			$result['access_token'] = $session->getLongLivedSession()->getToken();
 
 			if(!$user_image['is_silhouette'])
@@ -214,9 +221,10 @@ class Facebook implements ProviderInterface{
 
 		$oauth->access_token = $userData['access_token'];
 		$oauth->uid = $userData['uid'];
-		$oauth->location = $userData['location'];
-		$oauth->url = $userData['url'];
 		$oauth->username = $userData['username'];
+		$oauth->gender = $userData['gender'];
+		$oauth->birthday = $userData['birthday'];
+		$oauth->location = $userData['location'];
 
 		if(isset($userData['image_url']))
 		{
@@ -253,10 +261,9 @@ class Facebook implements ProviderInterface{
 	 **/
 	public function getAuthUrl()
 	{
+		$config = Config::get('rjvim.connect.facebook.clients.'.$this->client);
 
-		$config = Config::get('connect::facebook.clients.'.$this->client);
-
-		$helper = new LaravelFacebookRedirectLoginHelper($config['redirect_uri']);
+		$helper = new LaravelFacebookRedirectLoginHelper($config['redirect_uri'],$config['client_id'], $config['client_secret']);
 
 		return $helper->getLoginUrl($this->getScopes());
 	}
