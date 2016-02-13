@@ -127,7 +127,7 @@ class Facebook implements ProviderInterface{
 
 
 		    $user_profile = (new FacebookRequest(
-		      $session, 'GET', '/me?fields=id,name,email,birthday,location,gender,bio'
+		      $session, 'GET', '/me?fields=id,name,email,birthday,location,gender,bio,link'
 		    ))->execute()->getGraphObject(GraphUser::className());
 
 		    // dd($user_profile);
@@ -161,6 +161,7 @@ class Facebook implements ProviderInterface{
 			$result['name'] = isset($user_profile['name']) ? $user_profile['name'] : '';
 			$result['gender'] = isset($user_profile['gender']) ? $user_profile['gender'] : '';
 			$result['birthday'] = isset($user_profile['birthday']) ? $user_profile['birthday'] : '';
+			$result['link'] = isset($user_profile['link']) ? $user_profile['link'] : '';
 
 			if($this->sentry->check())
 			{
@@ -196,6 +197,8 @@ class Facebook implements ProviderInterface{
 				$result['image_url'] = $user_image['url'];
 			}
 
+			$result['image'] = $user_image['url'];
+
 			return $result;
 
 		}
@@ -226,9 +229,9 @@ class Facebook implements ProviderInterface{
 		$oauth->birthday = $userData['birthday'];
 		$oauth->location = $userData['location'];
 
-		if(isset($userData['image_url']))
+		if(isset($userData['image']))
 		{
-			$oauth->image_url = $userData['image_url'];
+			$oauth->image_url = $userData['image'];
 		}
 
 		if(!is_array($scope))

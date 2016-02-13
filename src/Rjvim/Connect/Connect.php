@@ -160,16 +160,38 @@ class Connect {
 	public function createUser($data,$activate = false)
 	{
 
+		$data['birthday'] = \Carbon::createFromTimestamp(strtotime($data['birthday']));
+
 		$password = isset($data['password']) ? $data['password'] : str_random(10);
 
 		$user = $this->sentry->createUser(array(
 			        'email'       => $data['email'],
-			        // 'first_name'  => $data['first_name'],
-			        // 'last_name'   => $data['last_name'],
-			        'name'   => $data['name'],
+			        'name'        => $data['name'],
 			        'password'    => $password,
 			        'activated'   => $activate,
 			    ));
+
+		if(in_array($data['gender'], ['male','female']))
+		{
+			$user->gender = $data['gender'];
+		}
+
+		if($data['birthday'])
+		{
+			$user->birthday = $data['birthday'];
+		}
+
+		if(isset($data['description']))
+		{
+			$user->description = strip_tags($data['description']);
+		}
+
+		if(isset($data['image']))
+		{
+			$user->photo = $data['image'];
+		}
+
+		$user->save();
 
 		return $user;
 
